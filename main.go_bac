@@ -1,0 +1,51 @@
+package main
+
+import (
+    "context"
+    "database/sql"
+    "github.com/heroiclabs/nakama-common/runtime"
+    "cloud.google.com/go/storage"
+    "google.golang.org/api/option"
+    "time"
+  )
+
+
+
+func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
+	initStart := time.Now()
+  google := context.Background()
+
+
+  client, err := storage.NewClient(google, option.WithCredentialsFile("./artworld.json"))
+if err != nil {
+		logger.Info("Failed to create client: %v", err)
+	}
+	defer client.Close()
+
+
+	// Sets your Google Cloud Platform project ID.
+	projectID := "artworld-321011"
+
+
+	// Sets the name for the new bucket.
+	bucketName := "my-new-bucket"
+
+	// Creates a Bucket instance.
+	bucket := client.Bucket(bucketName)
+
+	// Creates the new bucket.
+	google, cancel := context.WithTimeout(google, time.Second*10)
+	defer cancel()
+	if err := bucket.Create(ctx, projectID, nil); err != nil {
+		logger.Info("Failed to create bucket: %v", err)
+	}
+
+
+
+
+	logger.Info("Plugin loaded in '%d' msec.", time.Now().Sub(initStart).Milliseconds())
+    return nil
+}
+
+
+
