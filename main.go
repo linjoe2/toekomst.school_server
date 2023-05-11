@@ -5,36 +5,37 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
-	"time"
-	"fmt"
 	"errors"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-//	"github.com/heroiclabs/nakama-common/api"
+	"time"
+	//	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"go.uber.org/ratelimit"
-//	"github.com/mitchellh/mapstructure"
+	//	"github.com/mitchellh/mapstructure"
 
 	"crypto/hmac"
 	"crypto/sha256"
 )
 
 const (
-	AWS_S3_REGION = "frankfurt"
-	AWS_S3_BUCKET = "cardchat"
+	AWS_S3_REGION   = "frankfurt"
+	AWS_S3_BUCKET   = "cardchat"
 	AWS_S3_ENDPOINT = "https://n8j4.fra.idrivee2-28.com"
 )
 
 // session start
 var sess = connectAWS()
+
 func connectAWS() *session.Session {
-//	sess, err := session.NewSession(&aws.Config{Region: aws.String(AWS_S3_REGION)})
-//	if err != nil {
-//		panic(err)
-//	}
+	//	sess, err := session.NewSession(&aws.Config{Region: aws.String(AWS_S3_REGION)})
+	//	if err != nil {
+	//		panic(err)
+	//	}
 
 	defaultResolver := endpoints.DefaultResolver()
 	s3CustResolverFn := func(service, region string, optFns ...func(*endpoints.Options)) (endpoints.ResolvedEndpoint, error) {
@@ -62,23 +63,21 @@ func connectAWS() *session.Session {
 
 //session end
 
-	
-
 var svc = s3.New(sess)
 var rl = ratelimit.New(100)
 
 var UserList []UserInfo
 
 type UserInfo struct {
-	Name        string    `json:"name"`
-	User_id     string    `json:"user_id"`
-	Avatar_url  string    `json:"avatar_url"`
-	Avatar_time time.Time `json:"avatar_time"`
-	PosX        float32   `json:"posX"`
-	PosY        float32   `json:"posY"`
-	Location    string    `json:"location"`
+	Name         string    `json:"name"`
+	User_id      string    `json:"user_id"`
+	Avatar_url   string    `json:"avatar_url"`
+	Avatar_time  time.Time `json:"avatar_time"`
+	PosX         float32   `json:"posX"`
+	PosY         float32   `json:"posY"`
+	Location     string    `json:"location"`
 	LocationTime time.Time `json:"locationTime"`
-	StartTime   time.Time   `json:"startTime"`
+	StartTime    time.Time `json:"startTime"`
 }
 
 type data struct {
@@ -86,16 +85,16 @@ type data struct {
 	Location string  `json:"location"`
 	PosX     float32 `json:"posX"`
 	PosY     float32 `json:"posY"`
-	Action	 string  `json:"action"`
+	Action   string  `json:"action"`
 }
 
 type meta struct {
-	User_id  string  `json:"user_id"`
-	Location string  `json:"location"`
-	PosX     float32 `json:"posX"`
-	PosY     float32 `json:"posY"`
-	Role     string  `json:"role"`
-	Azc      string  `json:"azc"`
+	User_id       string        `json:"user_id"`
+	Location      string        `json:"location"`
+	PosX          float32       `json:"posX"`
+	PosY          float32       `json:"posY"`
+	Role          string        `json:"role"`
+	Azc           string        `json:"azc"`
 	TotalPlayTime time.Duration `json: "totalPlayTime"`
 }
 
@@ -173,13 +172,12 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	}
 
 	if err := initializer.RegisterRpc("SessionCheck", rpcSessionCheck); err != nil {
-	    return err
+		return err
 	}
 
 	logger.Info("Hello World!")
 	return nil
 }
-
 
 // list all files
 
@@ -260,16 +258,14 @@ func uploadFile(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	// userId, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
 	userId := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
 
-//	for m := range UserList {
-//		if UserList[m].User_id == userId {
-//			UserList[m] = UserList[len(UserList)-1]
-//			UserList = UserList[:len(UserList)-1]
-//		}
-//	}
+	//	for m := range UserList {
+	//		if UserList[m].User_id == userId {
+	//			UserList[m] = UserList[len(UserList)-1]
+	//			UserList = UserList[:len(UserList)-1]
+	//		}
+	//	}
 
-	var location = input["type"] + "/" + userId + "/" + input["filename"]  // sanitize inputs for control chars etc
-
-
+	var location = input["type"] + "/" + userId + "/" + input["filename"] // sanitize inputs for control chars etc
 
 	//svc := s3.New(sess)
 
@@ -317,7 +313,7 @@ func deleteFile(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		// delete files on aws
 
 		svc := s3.New(sess)
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! please sanatize paths to not have everything deleted...
+		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! please sanatize paths to not have everything deleted...
 		for _, i := range extensions {
 			var location = fileType + "/" + fileUser + "/" + fileName + i
 
@@ -413,7 +409,6 @@ func JoinStream(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		logger.Error("Invalid context")
 	}
 
-
 	mode := uint8(123)
 	hidden := false
 	persistence := false
@@ -432,29 +427,21 @@ func JoinStream(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	var createSession = true
 	var memberList []UserInfo
 
-
-
-
-
 	//if false, create user
-	var userExists = false;
+	var userExists = false
 
-
-
-
-
-	for m := range UserList{
-		if(UserList[m].User_id == userID ){
-		  userExists = true;
-		  // add current location
-		  UserList[m].Location = payload
-		  UserList[m].LocationTime = time.Now()
-		  // add current time
+	for m := range UserList {
+		if UserList[m].User_id == userID {
+			userExists = true
+			// add current location
+			UserList[m].Location = payload
+			UserList[m].LocationTime = time.Now()
+			// add current time
 		}
 	}
 
-	if(!userExists){
-	//	createSession = false
+	if !userExists {
+		//	createSession = false
 		// create user here //
 		user := getAvatar(db, logger, userID)
 		user.StartTime = time.Now()
@@ -465,13 +452,10 @@ func JoinStream(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		logger.Error("userAdded", UserList)
 	}
 
-
 	logger.Error("userList", UserList)
 
-
-
 	for _, m := range members {
-	// get avatar url from db
+		// get avatar url from db
 		if m.GetUserId() != userID {
 			user := getAvatar(db, logger, m.GetUserId())
 			user.Name = m.GetUsername()
@@ -489,8 +473,6 @@ func JoinStream(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		}
 
 	}
-
-
 
 	response, err := json.Marshal(memberList)
 	if err != nil {
@@ -682,55 +664,51 @@ func LeaveStream(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runt
 			metadata["location"] = payload
 			logger.Error("exit stream metadata", metadata)
 			logger.Error("exit stream userList", UserList[m])
-		//get timerobject
-			objectIds:= [] * runtime.StorageRead { & runtime.StorageRead {
-			        Collection: "achievements",
-			        Key: "timers",
-			        UserID: userID,
-			    },
+			//get timerobject
+			objectIds := []*runtime.StorageRead{&runtime.StorageRead{
+				Collection: "achievements",
+				Key:        "timers",
+				UserID:     userID,
+			},
 			}
 
-			records, err:= nk.StorageRead(ctx, objectIds)
+			records, err := nk.StorageRead(ctx, objectIds)
 			if err != nil {
-			    logger.WithField("err", err).Error("Storage read error.")
+				logger.WithField("err", err).Error("Storage read error.")
 			}
 			timerObject := make(map[string]interface{})
 
-
-
-
-
 			if len(records) > 0 {
-			//	timerObject = records[0]
-		
+				//	timerObject = records[0]
+
 				if err := json.Unmarshal([]byte(records[0].Value), &timerObject); err != nil {
-				logger.Error("", "error deserializing metadata")
+					logger.Error("", "error deserializing metadata")
 				}
 				logger.Error("records", timerObject)
 			}
-		// update timer object
+			// update timer object
 			Timer := time.Now().Sub(UserList[m].LocationTime)
 			oldTimer, _ := timerObject[UserList[m].Location].(time.Duration)
 
 			timerObject[UserList[m].Location] = oldTimer + Timer
 
-		// push time object
+			// push time object
 			val, err := json.Marshal(timerObject)
 
-			objectIDs:= [] * runtime.StorageWrite { & runtime.StorageWrite {
+			objectIDs := []*runtime.StorageWrite{&runtime.StorageWrite{
 				Collection: "achievements",
-			        Key: "timers",
-			        UserID: userID,
-				Value: string(val), // Value must be a valid encoded JSON object.
-				},
+				Key:        "timers",
+				UserID:     userID,
+				Value:      string(val), // Value must be a valid encoded JSON object.
+			},
 			}
 
-			_, err= nk.StorageWrite(ctx, objectIDs)
+			_, err = nk.StorageWrite(ctx, objectIDs)
 			if err != nil {
-			    logger.WithField("err", err).Error("Storage write error.")
+				logger.WithField("err", err).Error("Storage write error.")
 			}
 
-		// end of func
+			// end of func
 		}
 	}
 
@@ -829,14 +807,14 @@ func getFullAccount(ctx context.Context, logger runtime.Logger, db *sql.DB, nk r
 func convertImage(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
 	var input map[string]string
 	err := json.Unmarshal([]byte(payload), &input)
-	
-	    logger.Error("recieved input", input)
+
+	logger.Error("recieved input", input)
 	if err != nil {
 		return "", err
 	}
 
 	var path string
-		if input["height"] != "" {
+	if input["height"] != "" {
 		path += "/fit-in/" + input["width"] + "x" + input["height"] //nice to have: sanitize path
 	}
 
@@ -847,7 +825,6 @@ func convertImage(ctx context.Context, logger runtime.Logger, db *sql.DB, nk run
 	path += "/" + input["path"] //nice to have: sanitize path
 
 	secret := "2jhTTNXH9wT37VKA" // place in envar + replace by newly generated secret
-	
 
 	h := hmac.New(sha256.New, []byte(secret))
 
@@ -860,38 +837,33 @@ func convertImage(ctx context.Context, logger runtime.Logger, db *sql.DB, nk run
 	url := "https://d1p8yo0yov6nht.cloudfront.net" + path + "?signature=" + signature //nice to have: sanitize path
 
 	response := `{ "url" : "` + url + `"}` // string fixxxxx
-    logger.Error("converted img", response)
+	logger.Error("converted img", response)
 	return string(response), nil
 }
 
-
-
-
 // noit functioning yet, needs to enable the notifications in front end most likely...
 type SessionCheckResponse struct {
-    AlreadyConnected bool `json:"already_connected"`
+	AlreadyConnected bool `json:"already_connected"`
 }
 
 func rpcSessionCheck(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, payload string) (string, error) {
-    userID, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
-    if !ok {
-        return "", runtime.NewError("no ID for user; must be authenticated", 3)
-    }
-    // See how many presences the user has on their notification stream.
-    count, err := nk.StreamCount(0, userID, "", "")
-    if err != nil {
-        return "", fmt.Errorf("unable to count notification stream for user: %s", userID)
-    }
-    response, err := json.Marshal(&SessionCheckResponse{AlreadyConnected: count > 1})
-    if err != nil {
-        logger.Error("unable to encode json: %v", err)
-        return "", errors.New("failed to encode json")
-    }
-    return string(response), nil
+	userID, ok := ctx.Value(runtime.RUNTIME_CTX_USER_ID).(string)
+	if !ok {
+		return "", runtime.NewError("no ID for user; must be authenticated", 3)
+	}
+	// See how many presences the user has on their notification stream.
+	count, err := nk.StreamCount(0, userID, "", "")
+	if err != nil {
+		return "", fmt.Errorf("unable to count notification stream for user: %s", userID)
+	}
+	response, err := json.Marshal(&SessionCheckResponse{AlreadyConnected: count > 1})
+	if err != nil {
+		logger.Error("unable to encode json: %v", err)
+		return "", errors.New("failed to encode json")
+	}
+	return string(response), nil
 }
 
-
-
-// rate limiter and lockout or exponential backof on login 
+// rate limiter and lockout or exponential backof on login
 // create a dev/prod variable to update code, based on state
 // fix json shit strings

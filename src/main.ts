@@ -20,7 +20,7 @@ function InitModule(
   initializer.registerRpc("send_artpiece", sendArtpiece);
   initializer.registerRpc("scan_card", scanCard);
   initializer.registerRpc("reset_password_admin", resetPasswordAdmin);
-
+  initializer.registerRpc("init_chat", initChat);
   
 }
 
@@ -660,3 +660,46 @@ let activateCard: nkruntime.RpcFunction = function (
 
 
 };
+
+let initChat: nkruntime.RpcFunction = function (
+  ctx: nkruntime.Context,
+  logger: nkruntime.Logger,
+  nk: nkruntime.Nakama,
+  payload: string
+) {
+    // get user who sent request
+    // recieve card id
+    let json = JSON.parse(payload);
+    let users: any = nk.usersGetId([ctx.userId, json.userId]);
+
+    // get user who gave the card
+
+    // update user id of card to new user
+    let query = "UPDATE storage SET user_id = $2 WHERE key = $1 AND collection = 'card' ";
+    let parameters = [json.key, ctx.userId];
+    try {
+      let dbResponse = nk.sqlExec(query, parameters);
+      logger.error("card user updated", dbResponse);
+    } catch (error) {
+      // Handle error
+      logger.error("card user failed");
+    }
+
+
+
+    // // add user as friend
+    // let userId = "b1aafe16-7540-11e7-9738-13777fcc7cd8";
+    // let username = "username";
+    // let userIds = ['9a51cf3a-2377-11eb-b713-e7d403afe081', 'a042c19c-2377-11eb-b7c1-cfafae11cfbc'];
+    // let usernames = ["newfriend1", "newfriend2"];
+
+    try {
+      nk.friendsAdd(json.userId, users[0].username , [ctx.userId], [users[1].username]);
+    } catch (error) {
+      // Handle error
+      logger.error("friend add error", error);
+    }
+    // // accept user as friend 
+
+  return '{"status": "succes"}';
+}

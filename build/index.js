@@ -42,6 +42,7 @@ function InitModule(ctx, logger, nk, initializer) {
   initializer.registerRpc("send_artpiece", sendArtpiece);
   initializer.registerRpc("scan_card", scanCard);
   initializer.registerRpc("reset_password_admin", resetPasswordAdmin);
+  initializer.registerRpc("init_chat", initChat);
 }
 
 !InitModule && InitModule.bind(null);
@@ -322,4 +323,26 @@ var scanCard = function scanCard(ctx, logger, nk, payload) {
   row.value = JSON.parse(String.fromCharCode.apply(String, _toConsumableArray(row.value)));
   row.permission_read = row.read;
   return JSON.stringify(row);
+};
+
+var initChat = function initChat(ctx, logger, nk, payload) {
+  var json = JSON.parse(payload);
+  var users = nk.usersGetId([ctx.userId, json.userId]);
+  var query = "UPDATE storage SET user_id = $2 WHERE key = $1 AND collection = 'card' ";
+  var parameters = [json.key, ctx.userId];
+
+  try {
+    var dbResponse = nk.sqlExec(query, parameters);
+    logger.error("card user updated", dbResponse);
+  } catch (error) {
+    logger.error("card user failed");
+  }
+
+  try {
+    nk.friendsAdd(json.userId, users[0].username, [ctx.userId], [users[1].username]);
+  } catch (error) {
+    logger.error("friend add error", error);
+  }
+
+  return '{"status": "succes"}';
 };
